@@ -1,0 +1,38 @@
+{
+  "name": "projetss6-robot-15540",
+  "version": "1.0.0",
+  "description": "- [Sujet du projet](https://www.labri.fr/perso/renault/working/teaching/projets/2021-22-S6-Js-Robot.php)",
+  "main": "public/main.js",
+  "directories": {
+    "public": "public",
+    "src": "src",
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "npm run test && npx tsc src/*.ts --outDir public",
+    "eslint-test": "eslint src/*.ts",
+    "test": "npm run eslint-test && jest",
+    "clear": "rm public/*.js",
+    "start": "cd public && npx parcel index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://mchalabi@thor.enseirb-matmeca.fr/git/projetss6-robot-15540"
+  },
+  "keywords": [],
+  "author": "Team 13",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "@types/node": "^17.0.24",
+    "@typescript-eslint/eslint-plugin": "^5.20.0",
+    "@typescript-eslint/parser": "^5.20.0",
+    "commander": "^9.2.0",
+    "eslint": "^8.13.0",
+    "jest": "^27.5.1",
+    "parcel": "^2.4.1",
+    "sharp": "^0.29.3",
+    "ts-jest": "^27.1.4",
+    "typescript": "^4.6.3"
+  }
+}

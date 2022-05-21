@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <title>Robot Programming Visualizer</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        background-color: #2b2a33;
+        color: #eee;
+        font-family: Helvetica, Arial;
+      }
+      div#visualizer {
+        font: 25px/25px Arial;
+        height: 100%;
+        margin: auto;
+        display: flex;
+      }
+      #visualizer_central{
+        flex-grow: 5;
+        background: #333;
+        padding: 50px 0px 50px 0px;
+        margin: auto;
+      }
+      #visualizer table {
+        border-collapse: collapse;
+        margin: auto;
+      }
+      #visualizer_board td {
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        padding: 0px;
+        font-family: 'robots';
+        font-size: 24px;
+      }
+      #visualizer_popup button.red_tile,
+      #visualizer_board td.red_tile {
+        border: 1px solid gray;
+        background: linear-gradient(to top left, #ff0000, #993333);
+      }
+      #visualizer_board td.green_tile {
+        border: 1px solid gray;
+        background: linear-gradient(to top left, #00aa44, #337733);
+      }
+      #visualizer_board td.blue_tile {
+        border: 1px solid gray;
+        background: linear-gradient(to top left, #0044ff, #333399);
+      }
+      #visualizer_functions {
+        display: flex;
+        flex-direction: column;
+        margin-top: 50px;
+      }
+      @font-face {
+        font-family: 'robots';
+        src: url('./resources/robot.ttf') format('truetype');
+      }
+      #visualiser_command {
+        flex-grow: 2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      #visualizer_log {
+        background-color: #fff;
+        color: #000;
+        font-size: 20px;
+        width: 500px;
+        height: 100px;
+      }
+      #visualizer_log p {
+        margin: 0;
+      }
+      #visualizer_buttons {
+        display: flex;
+        flex-direction: column;
+      }
+      .action_button {
+        width: 30px;
+        height: 30px;
+      }
+      #visualizer_central button {
+        width: 50px;
+        height: 50px;
+      }
+      .label_function {
+        float: left;        
+        margin-right: 10px;
+        font-weight: 700;
+      }
+      .instruction {
+        float: left;        
+      }
+      #visualizer_program {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+      }
+      .function {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #visualizer_popup {
+        display: none;
+        flex-direction: column;
+      }
+      #visualizer_popup div.button {
+        background: none;
+      }
+      #imgInstructions {
+        display: none;
+      } 
+    </style>
+  </head>
+  <body>
+    <div id='visualizer'>
+      <div id='visualizer_central'>
+        <table>
+          <tbody id='visualizer_board'></tbody>
+        </table>
+
+        <div id="visualizer_program">
+          <div id='visualizer_functions'>
+          </div>
+          
+          <div id='visualizer_popup'>
+            <div>
+              <button class='action move,-1'></button>
+              <button class='action left,-1'></button>
+              <button class='action right,-1'></button>
+              <button class='action rotate,-1'></button>
+              <button class='action func,-1,1'></button>
+              <button class='action func,-1,2'></button>
+              <button class='action func,-1,3'></button>
+              <button class='action func,-1,4'></button>
+              <button class='action func,-1,5'></button>
+            </div>
+            <div>
+              <button class='action move,1'></button>
+              <button class='action left,1'></button>
+              <button class='action right,1'></button>
+              <button class='action rotate,1'></button>
+              <button class='action func,1,1'></button>
+              <button class='action func,1,2'></button>
+              <button class='action func,1,3'></button>
+              <button class='action func,1,4'></button>
+              <button class='action func,1,5'></button>
+            </div>
+            <div>
+              <button class='action move,2'></button>
+              <button class='action left,2'></button>
+              <button class='action right,2'></button>
+              <button class='action rotate,2'></button>
+              <button class='action func,2,1'></button>
+              <button class='action func,2,2'></button>
+              <button class='action func,2,3'></button>
+              <button class='action func,2,4'></button>
+              <button class='action func,2,5'></button>
+            </div>
+            <div>
+              <button class='action move,3'></button>
+              <button class='action left,3'></button>
+              <button class='action right,3'></button>            
+              <button class='action rotate,3'></button>
+              <button class='action func,3,1'></button>
+              <button class='action func,3,2'></button>
+              <button class='action func,3,3'></button>
+              <button class='action func,3,4'></button>
+              <button class='action func,3,5'></button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='visualiser_command'>
+        <div id='visualizer_log'>
+        </div>
+        <div id='visualizer_buttons'>
+          <button id='button_random'>Random puzzle</button>
+          <button id='button_prev'>Previous</button>
+          <button id='button_next'>Next</button>
+          <button id='button_clear'>Clear</button>
+          <button id='button_execute'>Play</button>
+        </div>
+      </div>
+    </div>
+    <img id='imgInstructions' src='./resources/instructions.png'/>
+  </body>
+
+  <script type='module'>
+    // 'robots.ttf' defines 16 ad-hoc icons, using codes from \uEE00 to \uEE0F :
+    // 0 = robot pointing east, 1 = robot pointing south, 2 = robot pointing west,
+    // 3 = robot pointing north, 4 = star, 5 = disk, 6 = box, 7 = flash,
+    // 8 = heart, 9 = broken heart, A = lock, B = open lock, C = key,
+    // D = droplet, E = rocket, F = empty
+    const icons = {
+      robotEast: { string: '\uEE00', color: 'pink' },
+      robotSouth: { string: '\uEE01', color: 'pink' },
+      robotWest: { string: '\uEE02', color: 'pink' },
+      robotNorth: { string: '\uEE03', color: 'pink' },
+      star: { string: '\uEE04', color: 'yellow' },
+      disk: { string: '\uEE05', color: 'red' },
+      box: { string: '\uEE06', color: 'red' },
+      flash: { string: '\uEE07', color: 'red' },
+      heart: { string: '\uEE08', color: 'red' },
+      heartBroken: { string: '\uEE09', color: 'red' },
+      lock: { string: '\uEE0A', color: 'red' },
+      lockOpen: { string: '\uEE0B', color: 'red' },
+      key: { string: '\uEE0C', color: 'yellow' },
+      droplet: { string: '\uEE0D', color: 'red' },
+      rocket: { string: '\uEE0E', color: 'red' },
+      empty: { string: '\uEE0F', color: 'red' }
+    };
+
+    const robotID = "robot";
+    const aBoardID = 'visualizer_board';
+    const functionID = 'visualizer_functions';
+    const prevButtonID = 'button_prev';
+    const nextButtonID = 'button_next';
+    const randomButtonID = 'button_random';
+    const executeButtonID = 'button_execute';
+    const clearButtonID = 'button_clear';
+    const instructionClass = 'instruction';
+    const actionClass = 'action';
+
+    const image = document.getElementById('imgInstructions');
+    const popup = document.getElementById('visualizer_popup');
+    const logs = document.getElementById('visualizer_log');
+
+    let hiddenPopup = true;
+    let currentInstruction = null;
+
+    /**
+     * Displays action choices popup.
+     */ 
+    function displayPopup() {
+      if (hiddenPopup) {
+        popup.style.display = 'flex';
+      } else {
+        popup.style.display = 'none';
+      }
+      hiddenPopup = !hiddenPopup;
+    }
+
+    /**
+     * Initialises functions and function instruction block views.
+     */
+    function initFunctions(puzzle) {
+      const functions = document.getElementById(functionID);
+
+      for (let i = 0; i < puzzle.subs.length; ++i) {        
+        const f = document.createElement('div');
+        f.classList.add('function');
+        f.setAttribute('id', 'f'+i);        
+        functions.appendChild(f);
+        
+        if (puzzle.subs[i] !== 0) {
+          const fName = document.createElement('span');
+          fName.classList.add('label_function');        
+          fName.appendChild(document.createTextNode('F'+(i+1)));
+          f.appendChild(fName);
+        }
+
+        for (let j = 0; j < puzzle.subs[i]; ++j) {
+          const inst = document.createElement('button');
+          inst.classList.add(instructionClass);
+          f.appendChild(inst);
+        }
+      }
+    }
+
+    /**
+     * Appends the selected action to the targeted instruction block. 
+     */
+     function addAction(event) {
+      event.preventDefault();
+      currentInstruction.innerText = event.target.innerText;
+      currentInstruction.style.background = event.target.style.background;
+      currentInstruction.style.backgroundSize = event.target.style.backgroundSize;
+      currentInstruction.style.backgroundPosition = event.target.style.backgroundPosition;
+      currentInstruction.classList.add(event.target.className.split(' ')[1]);
+      displayPopup();
+      currentInstruction = null;
+    }
+
+    /**
+     * Initialises actions views and events.
+     */
+    function initActions() {
+      const actions = document.getElementsByClassName(actionClass);
+
+      for (let action of actions) {
+        action.onclick = addAction;
+        action.style.background = `url(${image.src})`;
+        action.style.backgroundSize = `auto 50px`;
+
+        switch (action.className.split(' ')[1]) {
+          case 'move,-1':
+            action.style.backgroundPosition = `-2px -2px`;
+            break;
+          case 'move,1':
+            action.className += ' red_tile';
+            action.style.backgroundPosition = `-51px -0px`;
+            break;
+          case 'move,2':
+            action.className += ' green_tile';
+            action.style.backgroundPosition = `-102px -2px`;
+            break;
+          case 'move,3':
+            action.className += ' blue_tile';
+            action.style.backgroundPosition = `-152px -2px`;
+            break;
+          case 'left,-1':
+            action.style.backgroundPosition = `-202px -2px`;
+            break;
+          case 'left,1':
+            action.className += ' red_tile';
+            action.style.backgroundPosition = `-251px -1px`;
+            break;
+          case 'left,2':
+            action.className += ' green_tile';
+            action.style.backgroundPosition = `-302px -2px`;
+            break;
+          case 'left,3':
+            action.className += ' blue_tile';
+            action.style.backgroundPosition = `-352px -2px`;
+            break;
+          case 'right,-1':
+            action.style.backgroundPosition = `-402px -2px`;
+            break;
+          case 'right,1':
+            action.className += ' red_tile';
+            action.style.backgroundPosition = `-450px -1px`;
+            break;
+          case 'right,2':
+            action.className += ' green_tile';
+            action.style.backgroundPosition = `-501px -2px`;
+            break;
+          case 'right,3':
+            action.className += ' blue_tile';
+            action.style.backgroundPosition = `-551px -2px`;
+            break;
+          case 'rotate,-1':
+            action.style.backgroundPosition = `-601px -2px`;
+            break;
+          case 'rotate,1':
+            action.className += ' red_tile';
+            action.style.backgroundPosition = `-650px -1px`;
+            break;
+          case 'rotate,2':
+            action.className += ' green_tile';
+            action.style.backgroundPosition = `-701px -2px`;
+            break;
+          case 'rotate,3':
+            action.className += ' blue_tile';
+            action.style.backgroundPosition = `-750px -2px`;
+            break;
+
+          case 'func,-1,1':
+            action.style.backgroundPosition = `-799px -2px`;
+            break;
+          case 'func,1,1':
+            action.style.backgroundPosition = `-849px -2px`;
+            break;
+          case 'func,2,1':
+            action.style.backgroundPosition = `-899px -2px`;
+            break;
+          case 'func,3,1':
+            action.style.backgroundPosition = `-950px -2px`;
+            break;
+          case 'func,-1,2':
+            action.style.backgroundPosition = `-1000px -2px`;
+            break;
+          case 'func,1,2':
+            action.style.backgroundPosition = `-1050px -2px`;
+            break;
+          case 'func,2,2':
+            action.style.backgroundPosition = `-1100px -2px`;
+            break;
+          case 'func,3,2':
+            action.style.backgroundPosition = `-1150px -2px`;
+            break;
+          case 'func,-1,3':
+            action.style.backgroundPosition = `-1200px -2px`;
+            break;
+          case 'func,1,3':
+            action.style.backgroundPosition = `-1250px -2px`;
+            break;
+          case 'func,2,3':
+            action.style.backgroundPosition = `-1299px -2px`;
+            break;
+          case 'func,3,3':
+            action.style.backgroundPosition = `-1349px -2px`;
+            break;
+          case 'func,-1,4':
+            action.style.backgroundPosition = `-1399px -2px`;
+            break;
+          case 'func,1,4':
+            action.style.backgroundPosition = `-1449px -2px`;
+            break;
+          case 'func,2,4':
+            action.style.backgroundPosition = `-1499px -2px`;
+            break;
+          case 'func,3,4':
+            action.style.backgroundPosition = `-1549px -2px`;
+            break;
+          case 'func,-1,5':
+            action.style.backgroundPosition = `-1598px -2px`;
+            break;
+          case 'func,1,5':
+            action.style.backgroundPosition = `-1648px -2px`;
+            break;
+          case 'func,2,5':
+            action.style.backgroundPosition = `-1698px -2px`;
+            break;
+          case 'func,3,5':
+            action.style.backgroundPosition = `-1748px -2px`;
+            break;
+          default:
+              break;
+        }
+      }
+    }
+
+    /**
+     *Initialises current instruction targeted.
+     */
+    function getCurrentAction(event) {
+      event.preventDefault();
+      currentInstruction = event.target;
+    }
+
+    /**
+     * Links instruction blocks to action popup on click.
+     */
+     function initActionInstructionLink() {
+      const instructions = document.getElementsByClassName(instructionClass);
+
+      for (let inst of instructions) {
+        inst.onclick = (event) => {
+          displayPopup();
+          getCurrentAction(event);
+        };
+      }
+    }
+
+    /**
+     * Initialises function and action views and events.
+     */
+    function initProgramBlock(puzzle) {
+      initFunctions(puzzle);
+      initActions();
+      initActionInstructionLink();
+    }
+
+    /**
+     * Add star on 'aCell'.
+     */
+    function addStar(aCell) {
+      aCell.innerText = icons.star.string;
+      aCell.style.color = icons.star.color;
+    }
+
+    /**
+     * Add key on 'aCell'.
+     */
+    function addKey(aCell) {
+      aCell.innerText = icons.key.string;
+      aCell.style.color = icons.key.color;
+    }
+
+    /**
+     * Fills the board table a 'aPuzzle' board.
+     */
+    function fillBoard(aPuzzle) {
+      const tbody = document.getElementById(aBoardID);
+
+      aPuzzle.board.forEach((aLine) => {
+        const newRow = tbody.insertRow();
+        aLine.forEach((aChar) => {
+          const newCell = newRow.insertCell();
+          const indColors = aChar.indColor;
+          const indItems = aChar.indItem;
+
+          switch (indColors) {
+            case 0:
+              newCell.className += ' black_tile';
+              break;
+            case 1:
+              newCell.className += ' blue_tile';
+              break;
+            case 2:
+              newCell.className += ' red_tile';
+              break;
+            case 3:
+              newCell.className += ' green_tile';
+              break;
+            case 4:
+              newCell.className += ' yellow_tile';
+              break;
+            case 5:
+              newCell.className += ' purple_tile';
+              break;
+          }
+
+          switch (indItems) {
+            case 1:
+              addStar(newCell);
+              break;
+            case 2:
+              addKey(newCell);
+              break;
+            case 3:
+              addKey(newCell);
+              break;
+          }
+        });
+      });
+    }
+
+    /**
+     * Removes current board. 
+     */
+     function removeBoard() {
+      let tbody = document.getElementById(aBoardID);
+
+      while (tbody.hasChildNodes()) {
+        tbody.removeChild(tbody.lastChild);
+      }
+    }
+
+    /**
+     * Removes current board and fills 'aPuzzle' new board. 
+     */
+    function replaceBoard(aPuzzle) {
+      removeBoard();
+      fillBoard(aPuzzle);
+    }
+
+    /**
+     * Removes current program functions. 
+     */
+    function removeFunctions() {result
+      let functions = document.getElementById(functionID);
+
+      while (functions.hasChildNodes()) {
+        functions.removeChild(functions.lastChild);
+      }
+    }
+
+    /**
+     * Removes current program functions and fills new 'puzzle' functions. 
+     */
+    function replaceFunctions(puzzle) {
+      removeFunctions();
+      initProgramBlock(puzzle);
+    }
+
+    /**
+     * Remove current board puzzle.
+     */
+    function removeRobot() {
+      const rCell = document.getElementById(robotID);
+      rCell.removeAttribute("id");
+      rCell.removeAttribute("style");
+      rCell.innerText = icons.empty.string;
+    }
+
+    /**
+     * Add initial puzzle robot to board.  
+     */
+    function addRobot(aRobot) {
+      let aBoard = document.getElementById(aBoardID);
+      let aCell = aBoard.rows[aRobot.row].cells[aRobot.column];
+      let anIcon = icons[Object.keys(icons)[aRobot.direction]];
+      aCell.id = robotID;
+      aCell.innerText = anIcon.string;
+      aCell.style.color = anIcon.color;
+    }
+
+    /**
+     * Replaces current displayed board by its previous state.
+     */
+    function prevPuzzle(executionStack, indStack) {
+      let aPuzzle = executionStack[indStack];
+      removeRobot();
+      replaceBoard(aPuzzle);
+      addRobot(aPuzzle.robot);
+    }
+
+    /**
+     * Replaces current displayed board by its next state.
+     */
+    function nextPuzzle(executionStack, indStack) {
+      let aPuzzle = executionStack[indStack];
+      removeRobot();
+      replaceBoard(aPuzzle);
+      addRobot(aPuzzle.robot);
+    }
+
+    /**
+     * Returns instruction concatenation.
+     */
+    function buildStrProgram() {
+      const instructions = document.getElementsByClassName(instructionClass);
+      let strProgram = '';
+      
+      for (let inst of instructions) {
+        strProgram = strProgram.concat(inst.className.split(' ')[1]);
+        strProgram = strProgram.concat(';');
+      }
+
+      return strProgram;
+    }
+
+    /**
+     * Appends new program result paragraphs.
+     */
+    function addLog(log, calledInstructions, calledFunctions) {
+      const logP = document.createElement('p');
+      const calledInstructionsP = document.createElement('p');
+      const calledFunctionsP = document.createElement('p');
+
+      logP.appendChild(document.createTextNode('Message: '+log));
+      calledInstructionsP.appendChild(document.createTextNode('Number of called instructions: '+calledInstructions));
+      calledFunctionsP.appendChild(document.createTextNode('Number of called functions: '+calledFunctions)); 
+
+      logs.appendChild(logP);
+      logs.appendChild(calledInstructionsP);
+      logs.appendChild(calledFunctionsP);
+    }
+
+    /**
+     * Removes program result paragraphs.
+     */
+    function clearLog() {
+      while (logs.hasChildNodes()) {
+        logs.removeChild(logs.lastChild);
+      }
+    }
+
+    window.onload = () => {
+      import('./main.js').then(({ getRandomPuzzle, evaluateProgram }) => {
+        let executionStack = []; // program execution puzzle states, filled with puzzle when no execution.
+        let indStack = 0; // index current puzzle state displayed.
+        // puzzles initialisation.
+        executionStack.push(getRandomPuzzle());
+        fillBoard(executionStack[indStack]);
+
+        initProgramBlock(executionStack[0]);
+        addRobot(executionStack[indStack].robot);
+
+        // displaying previous puzzle state.
+        document.getElementById(prevButtonID).addEventListener('click', () => {
+          if (indStack - 1 > 0) {
+            indStack -= 1;
+            prevPuzzle(executionStack, indStack);
+          }
+        });
+
+        // displaying next puzzle state.
+        document.getElementById(nextButtonID).addEventListener('click', () => {
+          if (indStack + 1 < executionStack.length) {
+            indStack += 1;
+            nextPuzzle(executionStack, indStack);
+          }
+        });
+
+        // initialising new initial random puzzle.
+        document.getElementById(randomButtonID).addEventListener('click', () => {
+          indStack = 0;
+          executionStack = [];
+          executionStack.push(getRandomPuzzle());
+          replaceBoard(executionStack[indStack]);
+          replaceFunctions(executionStack[indStack]);
+        });
+
+        // lauching program evaluation.
+        document.getElementById(executeButtonID).addEventListener('click', () => {
+          clearLog();
+          const programResult = evaluateProgram(executionStack[0], buildStrProgram());
+          executionStack = programResult.executionStack;
+          addLog(
+            programResult.log, 
+            programResult.calledInstructions, 
+            programResult.calledFunctions);
+        });
+
+        // Clears log panel.
+        document.getElementById(clearButtonID).addEventListener('click', () => {
+          clearLog();
+        });
+      });
+    };
+  </script>
+</html>
